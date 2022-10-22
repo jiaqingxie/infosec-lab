@@ -22,7 +22,7 @@ public class Bleichenbacher_TestRunner extends StudentTestRunner {
         }
     }
 
-    protected static int bitLength = 70; // 46;
+    protected static int bitLength = 63; // 46;
     protected static int queryQuota = (int) 1e7; // 10 million queries should suffice
     protected int repetitions;
     protected List<TestingTuple> test_cases;

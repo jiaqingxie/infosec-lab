@@ -5,7 +5,6 @@ import java.util.Random;
 import utils.NumberUtils;
 import utils.Pair;
 import static utils.NumberUtils.ceilDivide;
-
 public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
 
     public I_RSAPKCS_OWCL_Challenger challenge;
@@ -20,29 +19,8 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
         // Do not change this constructor!
     }
 
-    // correct
-    public ArrayList<Pair<BigInteger, BigInteger>> intersect(ArrayList<Pair<BigInteger, BigInteger>> _M, BigInteger a, BigInteger b){
-        int counter = 0;
-        for (Pair<BigInteger, BigInteger> pair: _M){
-            if (pair.first.compareTo(b) != 1 && a.compareTo(pair.second) != 1){
-                var a_ = a.min(pair.first);
-                var b_ = b.max(pair.second);
-                _M.set(counter, new Pair<BigInteger, BigInteger>(a_, b_));
-               // return _M;
-               return _M;
-            }
-            counter+=1;
-        }
-        _M.add(new Pair<BigInteger,BigInteger>(a,b));
-        return _M;
-    }
-
     //correct 
     public Pair<BigInteger, BigInteger> step_1(BigInteger c, BigInteger N, BigInteger e) throws Exception{
-        if (challenge.isPKCSConforming(c)){
-            return new Pair<BigInteger,BigInteger>(BigInteger.valueOf(1), c);
-        }
-
         BigInteger _s0 = NumberUtils.getRandomBigInteger(rnd, N);
         BigInteger _c0 = (c.multiply(_s0.modPow(e, N))).mod(N);
         while (!challenge.isPKCSConforming(_c0)){
@@ -88,12 +66,10 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
             BigInteger s_i_right = (B_3.add(r_i.multiply(N))).divide(a);
             BigInteger s_i = s_i_left;
             BigInteger _c = (c0.multiply(s_i.modPow(e, N))).mod(N);
-
             while (!challenge.isPKCSConforming(_c) && s_i.compareTo(s_i_right) !=1){
                 s_i = s_i.add(BigInteger.valueOf(1));
                 _c = (c0.multiply(s_i.modPow(e, N))).mod(N);   
             }
-
             if(challenge.isPKCSConforming(_c) && s_i.compareTo(s_i_right) !=1){
                 return s_i;
             }
@@ -117,7 +93,7 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
                 BigInteger B_3_rn = B_3.add(N.multiply(r_i));
                 BigInteger _a_max = pair.first.max(ceilDivide(B_2_rn, s));
                 BigInteger _b_max = pair.second.min((B_3_rn.subtract(BigInteger.valueOf(1))).divide(s));
-                _M = intersect(_M, _a_max, _b_max);
+                _M.add(new Pair<BigInteger,BigInteger>(_a_max,_b_max));
                 r_i = r_i.add(BigInteger.valueOf(1));
             }
         }
@@ -134,17 +110,17 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
         BigInteger B_3_1 = (B.multiply(BigInteger.valueOf(3))).subtract(BigInteger.valueOf(1));
         M.add(new Pair<BigInteger,BigInteger>(B_2, B_3_1)); // M = [(2B, 3B - 1)]
         BigInteger s = step_2_a(pair_s0_c0.second, N, e, B);
-
         M = step_3(s, B, N, M);
-        
+
         while (true){
+            //System.out.println(M);
             if (M.size() > 1){
                 s = step_2_b(e, N, pair_s0_c0.second, s);
             }
             else{
                 Pair<BigInteger, BigInteger> pair = M.get(0);
                 if (pair.first.equals(pair.second)){
-                    var m = pair.first.multiply(pair_s0_c0.first.modPow(BigInteger.valueOf(-1), N)).mod(N);
+                    var m = pair.first.multiply(pair_s0_c0.first.modInverse(N)).mod(N);
                     return m;
                 }
                 s = step_2_c(e, N, pair_s0_c0.second, s, pair.first, pair.second, B);
@@ -155,14 +131,7 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
 
     public BigInteger m_pad_to_m(BigInteger m){
         String s = m.toString(16);
-        int where_true_m = 0;
-        for (int i = 0; i< s.length()-1; i++){
-            if (s.charAt(i) == '0' && s.charAt(i+1) == '0' && i > 15){
-                where_true_m = i+2;
-                break;
-            }
-        }
-        String true_m = s.substring(where_true_m, s.length());
+        String true_m = s.substring(s.length()-challenge.getPlainTextLength()*2, s.length());
         BigInteger ans = new BigInteger(true_m, 16);
         return ans;
     }
@@ -178,12 +147,8 @@ public class RSAPKCS_OWCL_Adversary implements I_RSAPKCS_OWCL_Adversary {
         BigInteger m = BigInteger.valueOf(0);
         try {
             m = BleiAttack(e, ciphertext, N); // be care that we need to change it to the byte(hex) string to take the real m !!!!
-            //System.out.println(m.toString(16));
             m = m_pad_to_m(m);
-            //System.out.println(m.toString(16));
-            
         } catch (Exception e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }    
         return m;

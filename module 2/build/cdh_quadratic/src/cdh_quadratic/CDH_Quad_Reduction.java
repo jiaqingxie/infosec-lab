@@ -46,27 +46,16 @@ public class CDH_Quad_Reduction extends A_CDH_Quad_Reduction<IGroupElement> {
     }
     
     public IGroupElement f2(IGroupElement g, IGroupElement gX, IGroupElement gY) {
-        // This function will always return g^(axy + bx + cy)
-        IGroupElement all = f1(g, gX, gY);
-        IGroupElement d = f1(g, gX.power(BigInteger.valueOf(0)), gY.power(BigInteger.valueOf(0))); //gd
-        IGroupElement ans = all.multiply(d.power(BigInteger.valueOf(-1)));
-        return ans;
+        return f1(g, gX, gY).multiply(f1(g, gX.power(BigInteger.valueOf(0)), gY.power(BigInteger.valueOf(0))).invert());
     }
     
     public IGroupElement f3(IGroupElement g, IGroupElement gX, IGroupElement gY) {
         // This function will always return g^(axy + bx)
-        IGroupElement all_nod = f2(g, gX, gY);
-        IGroupElement c = f2(g, gX.power(BigInteger.valueOf(0)), gY); //gcy
-        IGroupElement ans = all_nod.multiply(c.power(BigInteger.valueOf(-1)));
-        return ans;
+        return f2(g, gX, gY).multiply(f2(g, gX.power(BigInteger.valueOf(0)), gY).invert());
     }
     
     public IGroupElement f4(IGroupElement g, IGroupElement gX, IGroupElement gY) {
-        // This function will always return g^(axy)
-        IGroupElement all_nod_noc = f3(g, gX, gY);  // g^axy * gbx
-        IGroupElement b = f2(g, gX, gY.power(BigInteger.valueOf(0))); //gbx
-        IGroupElement ans = all_nod_noc.multiply(b.power(BigInteger.valueOf(-1)));
-        return ans;
+        return f3(g, gX, gY).multiply(f2(g, gX, gY.power(BigInteger.valueOf(0))).invert());
     }
 
     @Override
@@ -105,6 +94,7 @@ public class CDH_Quad_Reduction extends A_CDH_Quad_Reduction<IGroupElement> {
 
         IGroupElement big = f4(g, g, g); // g^a
         BigInteger p_3 = p.subtract(BigInteger.valueOf(3));
+
         for(int i = p_3.bitLength(); i >= 0; i--){
             current = p_3.testBit(i);
             if (current){ //current == 1
