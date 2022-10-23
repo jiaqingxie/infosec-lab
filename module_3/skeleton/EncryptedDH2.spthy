@@ -1,0 +1,123 @@
+theory EncryptedDH2
+begin
+
+/* Signed Diffie-Hellman protocol, second attempt:
+   A -> B : A, aenc_B{A, g^x}  (x fresh)
+   B -> A : B, aenc_A{B, g^y, h(g^x)}  (y fresh)
+   A -> B : A, aenc_B{A, h(g^y)}  */
+
+
+/* ----------------- */
+/* Equational theory */
+/* ----------------- */
+
+/* Load the built-in Diffie-Hellman, asymmetric encryption and hashing equational theories */
+builtins: diffie-hellman, asymmetric-encryption, hashing
+
+
+
+/* ------------------ */
+/* Key infrastructure */
+/* ------------------ */
+
+rule genkey: 
+   [ Fr(~kA) ] 
+   -->
+   [ !Key($A, ~kA),  
+     !Pk($A, pk(~kA)),
+     Out(pk(~kA)) ]
+
+
+/* Question 6*/
+
+/*----------------*/
+/* Protocol rules */
+/*----------------*/
+
+
+/*
+
+rule Init_1:
+[]
+--[]->
+[]
+
+rule Resp_1:
+[]
+--[]->
+[]
+
+rule Init_2:
+[]
+--[]->
+[]
+
+rule Resp_2:
+[]
+--[]->
+[]
+
+*/
+
+
+/* ---------- */
+/* Key Reveal */
+/* ---------- */
+
+
+
+
+
+
+/* ---------- */
+/* Restrictions */
+/* ---------- */
+
+restriction equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+
+/* ---------- */
+/* Properties */
+/* ---------- */
+
+/* Executability checks */
+lemma executableI:
+exists-trace "Ex #i A. FinishedI(A) @ i & not (Ex #j B. Compromised(B)@j)"
+
+lemma executableR:
+exists-trace "Ex #i B. FinishedR(B) @ i & not (Ex #j B. Compromised(B)@j)"
+
+
+/* Secrecy and agreement properties */
+
+lemma key_secrecyI:
+"All #i A B k.
+ (SecretI(A, B, k) @ i &
+  not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
+  ==> not (Ex #j. K(k) @ j)"
+
+lemma key_secrecyR:
+"All #i A B k.
+ (SecretR(A, B, k) @ i &
+  not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
+  ==> not (Ex #j. K(k) @ j)"
+
+
+lemma agreementR:
+"All #i A B k.
+  (CommitR( B, A, k) @ i &
+   not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
+   ==> (Ex #j. RunningI(A, B, k) @ j & j < i)"
+
+lemma agreementI:
+"All #i A B k.
+  (CommitI( A, B, k) @ i &
+   not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
+   ==> (Ex #j. RunningR(B, A, k) @ j & j < i)"
+
+
+end
+
+
+
