@@ -30,6 +30,7 @@ rule Init_1:
 
 /* Responder role */
 rule Resp_1:
+
   let gyR = 'g'^~yR
       kR = X^~yR
   in

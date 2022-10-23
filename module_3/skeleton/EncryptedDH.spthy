@@ -34,29 +34,42 @@ rule GenKey:  // generate long-term key pair, publish the public key
 
 /* Question 1 here */
 
-/*
-
+/* A -> B : A, aenc_pkB{g^x}  (x fresh) */
 rule Init_1:
-[]
---[]->
-[]
+  let gxI = 'g'^~xI in 
+   [ Fr(~xI), // fresh private key A # A → B : A, aencpkB{g x} x fresh
+     !Pk($B, pkB) ] // get public key B from B
+   -->
+   [ Init_1($A, ~xI, gxI),  // <~X, gX>
+     Out(<$A, aenc(gxI, pkB)>)] // aenc_pkB(gX)
 
+/* B -> A : B, aenc_A{g^y, h(g^x)}  (y fresh) */
 rule Resp_1:
-[]
---[]->
-[]
+  let gyR = 'g'^~yR in 
+   [ Fr(~yR), // fresh private key A # A → B : A, aencpkB{g x} x fresh
+     !Pk($A, pkA) ] // get hash public key A from A
+   -->
+   [ Resp_1($B, ~yR, gyR),  // <~Y, gyR>
+     Out(<$B, aenc(<gyR, h(pkA)>, pkA)>)] // aenc_A{g^y, h(g^x)}
 
+/* A -> B : A, aenc_B{h(g^y)} */
 rule Init_2:
-[]
---[]->
-[]
+  let kI = Y^~xI in   
+   [ Init_1($A, ~xI, gxI),
+     In(<b, Y>) ]          
+   --[ FinishedI($A),               // finish initiator 
+       SecretI($A, b, kI)]->   
+   [ Init_2($A, ~xI, gxI, Y, kI),   // update the state (this is not necessary, since this is the last initiator rule)
+     Out(<$A, aenc(h(Y), Y)>)]    // aenc_B{h(g^y)}
 
+// A & B agree on g^xy
 rule Resp_2:
-[]
---[]->
-[]
-
-*/
+  let kR = X^~yR in
+   [ Resp_1($B, ~yR, gyR),                     
+     In(<a, X>) ]               
+   --[ FinishedR($B),               // finish responder    
+       SecretR(a, $B, kR)]->        // update the state (this is not necessary, since this is the last responder rule)
+   [ Resp_2($B, ~yR, gyR, X, kR) ]  // finish 
 
 
 /* ---------- */
@@ -64,15 +77,18 @@ rule Resp_2:
 /* ---------- */
 
 /* Question 2 here */
-
+rule Compromised_:
+  [ !Key(A, k) ]
+  --[ Compromised(A) ]->
+  [ Out(k)]
 
 
 /* ---------- */
 /* Restrictions */
 /* ---------- */
 
-restriction equality:
-"All x y #i. Eq(x,y) @i ==> x = y"
+//restriction equality:
+//"All x y #i. Eq(x,y) @i ==> x = y"
 
 
 /* ---------- */
@@ -110,15 +126,15 @@ Please uncomment the following two lemmas for this question.
 */
 
 
-/*
+/* 
 lemma agreementR:
 "All #i A B k.
   (CommitR( B, A, k) @ i &
    not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
    ==> (Ex #j. RunningI(A, B, k) @ j & j < i)"
-*/
 
-/*
+
+
 lemma agreementI:
 "All #i A B k.
   (CommitI(A, B, k) @ i &
