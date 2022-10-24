@@ -47,7 +47,7 @@ rule Init_1:
 rule Resp_1:
   let gyR = 'g'^~yR in 
    [ Fr(~yR), // fresh private key A # A → B : A, aencpkB{g x} x fresh
-     !Pk($A, pkA) ] // get hash public key A from A
+     !Pk($A, pkA)] // get hash public key A from A
    -->
    [ Resp_1($B, ~yR, gyR),  // <~Y, gyR>
      Out(<$B, aenc(<gyR, h(pkA)>, pkA)>)] // aenc_A{g^y, h(g^x)}
@@ -77,10 +77,12 @@ rule Resp_2:
 /* ---------- */
 
 /* Question 2 here */
-rule Compromised_:
+rule Reveal_k:
   [ !Key(A, k) ]
   --[ Compromised(A) ]->
   [ Out(k)]
+
+  
 
 
 /* ---------- */
