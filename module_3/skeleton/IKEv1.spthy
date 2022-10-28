@@ -10,8 +10,7 @@ where:
    HASH_I = prf(<skID, g^y, g^x, B, A>)
    skID = prf(<h(<N_A, N_B>), A, B>)
 
-     */
-
+*/
 
 /* ----------------- */
 /* Equational theory */
@@ -36,24 +35,107 @@ rule genkey:
      !Pk($A, pk(~kA)),
      Out(pk(~kA)) ]
 
-
-
 /* Question 7*/
 
 /*----------------*/
 /* Protocol rules */
 /*----------------*/
 
+//  aenc_B{A}, aenc_B{N_A}, g^x  (N_A fresh nonce, x fresh)
+rule Init_1:
+  let 
+    gX = 'g'^~X // gX
+    anec_pkB_A = aenc($A, pkB)
+    anec_pkB_Na = aenc(~Na, pkB)
+  in 
+    [
+      Fr(~X),  // x fresh
+      Fr(~Na), // Na fresh nonce
+      !Pk($B, pkB),
+      !Key($A, skA)
+    ]
+    -->
+    [ Init_1($A, $B, ~X, gX, skA, pkB, ~Na),  
+      Out(<anec_pkB_A, anec_pkB_Na, gX>) // Out (<enc_pkB(A), enc_pkB(Na), gX>)
+    ] 
 
+rule Resp_1:
+  let 
+    gY = 'g'^~Y // gY
+    gxy = gX^~Y
+    Na_ = adec(anec_pkB_Na, skB)
+    skID = prf(<h(<Na_, ~Nb>), $A, $B>)
+    HashB = prf(<skID, gY, gX, $B, $A>)
+    aenc_pkA_B = aenc($B, pkA)
+    aenc_pkA_Nb = aenc(~Nb, pkA)
+    KAB = prf(<skID, gxy>)
+  in 
+    [ 
+      Fr(~Y), 
+      Fr(~Nb),
+      !Key($B, skB),
+      !Pk($A, pkA),
+      In(<anec_pkB_A, anec_pkB_Na, gX>) 
+    ] 
+    --[
+        Eq($A, adec(anec_pkB_A, skB)),
+        RunningR($B, $A, KAB)]->
+    [ 
+      Resp_1($B, $A, ~Y, gY, gX, skB, gxy, pkA, ~Nb, Na_, KAB, skID),  
+      Out(<aenc_pkA_B, aenc_pkA_Nb, gY, HashB>)
+    ] 
 
+//HASH_A
+rule Init_2:
+  let 
+    gxy = gY^~X
+    Nb_ = adec(aenc_pkA_Nb, skA)
+    skID_byA = prf(<h(<~Na, Nb_>), $A, b>)
+    HashB_byA = prf(<skID_byA, gY, gX, b, $A>)
+    HashA = prf(<skID_byA, gX, gY, $A, b>)
+    KAB = prf(<skID_byA, gxy>)
+  in   
+    [ 
+      Init_1($A, b, ~X, gX, skA, pkB, ~Na),
+      In(<aenc_pkA_B, aenc_pkA_Nb, gY, HashB>)
+    ]         
+    --[ 
+      Eq(b, adec(aenc_pkA_B, skA)),
+      Eq(HashB, HashB_byA),
+      FinishedI($A),           
+      SecretI($A, b, KAB),
+      CommitI($A, b, KAB),
+      RunningI($A, b, KAB)
+    ]->   
+    [ 
+      Out(HashA)
+    ]    
 
-
+rule Resp_2:
+  let 
+    HashA_byB = prf(<skID, gX, gY, $A, $B>)
+  in
+    [ 
+      Resp_1($B, $A, ~Y, gY, gX, skB, gxy, pkA, ~Nb, Na_, KAB, skID),
+      In(HashA)
+    ]               
+    --[ 
+      Eq(HashA, HashA_byB),
+      FinishedR($B),             
+      SecretR($A, $B, KAB),
+      CommitR($B, $A, KAB)
+    ]->        
+    []  // finish 
 
 
 /* ---------- */
 /* Key Reveal */
 /* ---------- */
 
+rule k:
+ [!Key(A, k)]
+ --[Compromised(A)]->
+ [Out(k)]
 
 
 
@@ -113,21 +195,19 @@ Please uncomment the following two lemmas for this question.
 */
 
 
-/*
+
 lemma secrecy_PFS_R:
  " All A B k #i. 
     SecretR(A, B, k) @i &
       not ((Ex #l. (Compromised(A) @ l & l<i )) | (Ex #m. (Compromised(B) @ m & m < i)) )  
     ==> not (Ex #j. K(k)@j )"
-*/
 
-/*
 lemma secrecy_PFS_I:
  " All A B k #i. 
     SecretI(A, B, k) @i &
       not ((Ex #l. (Compromised(A) @ l & l<i )) | (Ex #m. (Compromised(B) @ m & m < i)) )  
     ==> not (Ex #j. K(k)@j )"
-*/
+
 
 
 end

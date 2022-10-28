@@ -35,29 +35,87 @@ rule genkey:
 /*----------------*/
 
 
-/*
-
+//   A -> B : A, aenc_B{A, g^x}  (x fresh)
 rule Init_1:
-[]
---[]->
-[]
+  let 
+    gxI = 'g'^~xI // gX
+    anec_pkB_gX = aenc(<$A, gxI>, pkB)
+  in 
+    [
+      Fr(~xI), 
+      !Pk($B, pkB), 
+      !Key($A, skA)
+    ]
+    -->
+    [ Init_1($A, $B, ~xI, gxI, skA, pkB),
+      Out(anec_pkB_gX) 
+    ] 
 
+//   B -> A : B, aenc_A{B, g^y, h(g^x)}  (y fresh)
 rule Resp_1:
-[]
---[]->
-[]
+  let 
+    gyR = 'g'^~yR // gY
+    gX = snd(adec(X, skB))
+    pair = aenc(<$B,<gyR, h(gX)>>, pkA)
+    gxy = gX^~yR
+  in 
+    [ 
+      Fr(~yR), 
+      !Key($B, skB),
+      !Pk($A, pkA),
+      In(X)
+    ] 
+    --[ Eq($A, fst(adec(X, skB))),
+        RunningR($B, $A, gxy)]-> //
+    [ 
+      Resp_1($B, $A, ~yR, gyR, gX, skB, gxy),  // <~Y, gyR>
+      Out(pair)
+    ] 
 
+//   A -> B : A, aenc_B{A, h(g^y)}  */
 rule Init_2:
-[]
---[]->
-[]
+  let 
+    gy_ = fst(snd(adec(Y, skA))) // gY
+    h_gX = snd(snd(adec(Y, skA))) // hash(gX)
+    kI = gy_^~xI// (g^y)^~xI
+  in   
+    [ 
+      Init_1($A, $B, ~xI, gxI, skA, pkB),
+      In(Y)
+    ]         
+    --[ 
+      Eq(fst(adec(Y, skA)), $B),
+      Eq(h(gxI), h_gX),
+      CommitI($A, $B, kI),
+      RunningI($A, $B, kI),
+      FinishedI($A),          
+      SecretI($A, $B, kI)
+      
+    ]->   
+    [ 
+      Out(aenc(<$A, h(gy_)>, pkB))
+    ]    
 
+// A & B agree on g^xy
 rule Resp_2:
-[]
---[]->
-[]
+    [ 
+      Resp_1($B, $A, ~yR, gyR, gX, skB, gxy),
+      In(X)
+    ]               
+    --[ 
+      Eq(h(gyR), snd(adec(X, skB))),
+      CommitR($B, $A, gxy),
+      FinishedR($B),               // finish responder    
+      SecretR($A, $B, gxy)
+      
+    ]->        // update the state (this is not necessary, since this is the last responder rule)
+    []  // finish 
 
-*/
+/* ---------- */
+/* Key Reveal */
+
+
+
 
 
 /* ---------- */
@@ -66,7 +124,10 @@ rule Resp_2:
 
 
 
-
+rule yes:
+ [!Key(A, k)]
+ --[Compromised(A)]->
+ [Out(k)]
 
 
 /* ---------- */
@@ -115,6 +176,7 @@ lemma agreementI:
   (CommitI( A, B, k) @ i &
    not ((Ex #l. Compromised(A) @ l) | (Ex #m. Compromised(B) @ m)))
    ==> (Ex #j. RunningR(B, A, k) @ j & j < i)"
+
 
 
 end
