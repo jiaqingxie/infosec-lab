@@ -44,7 +44,7 @@ rule genkey:
 //  aenc_B{A}, aenc_B{N_A}, g^x  (N_A fresh nonce, x fresh)
 rule Init_1:
   let 
-    gX = 'g'^~X // gX
+    //gX = 
     anec_pkB_A = aenc($A, pkB)
     anec_pkB_Na = aenc(~Na, pkB)
   in 
@@ -55,8 +55,8 @@ rule Init_1:
       !Key($A, skA)
     ]
     -->
-    [ Init_1($A, $B, ~X, gX, skA, pkB, ~Na),  
-      Out(<anec_pkB_A, anec_pkB_Na, gX>) // Out (<enc_pkB(A), enc_pkB(Na), gX>)
+    [ Init_1($A, $B, ~X,'g'^~X , skA, pkB, ~Na),  
+      Out(<anec_pkB_A, anec_pkB_Na, 'g'^~X >) // Out (<enc_pkB(A), enc_pkB(Na), gX>)
     ] 
 
 rule Resp_1:
@@ -90,22 +90,22 @@ rule Init_2:
   let 
     gxy = gY^~X
     Nb_ = adec(aenc_pkA_Nb, skA)
-    skID_byA = prf(<h(<~Na, Nb_>), $A, b>)
-    HashB_byA = prf(<skID_byA, gY, gX, b, $A>)
-    HashA = prf(<skID_byA, gX, gY, $A, b>)
+    skID_byA = prf(<h(<~Na, Nb_>), $A, $B>)
+    HashB_byA = prf(<skID_byA, gY, gX, $B, $A>)
+    HashA = prf(<skID_byA, gX, gY, $A, $B>)
     KAB = prf(<skID_byA, gxy>)
   in   
     [ 
-      Init_1($A, b, ~X, gX, skA, pkB, ~Na),
+      Init_1($A, $B, ~X, gX, skA, pkB, ~Na),
       In(<aenc_pkA_B, aenc_pkA_Nb, gY, HashB>)
     ]         
     --[ 
-      Eq(b, adec(aenc_pkA_B, skA)),
+      Eq($B, adec(aenc_pkA_B, skA)),
       Eq(HashB, HashB_byA),
       FinishedI($A),           
-      SecretI($A, b, KAB),
-      CommitI($A, b, KAB),
-      RunningI($A, b, KAB)
+      SecretI($A, $B, KAB),
+      CommitI($A, $B, KAB),
+      RunningI($A, $B, KAB)
     ]->   
     [ 
       Out(HashA)
