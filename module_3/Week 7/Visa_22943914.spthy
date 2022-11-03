@@ -134,7 +134,9 @@ rule Terminal_Sends_AC:
   let transaction = <~PAN, PDOL, ATC, AC> in
   [
     Terminal_Ready_To_Send_AC($Terminal, ~PAN, PDOL, 'ARQC', ATC, AC),
-    Fr(~channelID)
+    Fr(~channelID),
+    !IssuedBy(~PAN, $Issuer)
+
   ]
   --[Running($Terminal, $Issuer, <'Terminal', 'Issuer', transaction>)]->
   [
@@ -158,7 +160,7 @@ rule Terminal_Receives_TC:
 // ============== Online Authorization ============== //
 rule Terminal_Receives_ARQC:
   let
-  
+
     transaction = <~PAN, PDOL, ATC, AC> 
   in
   [ 
@@ -170,7 +172,7 @@ rule Terminal_Receives_ARQC:
       Online(),
       Commit('Terminal', ~PAN, <'Card', 'Terminal', transaction>),
       Commit($Terminal, $Issuer, <'Issuer', 'Terminal', transaction>),
-      Honest($Issuer), Honest(~PAN), Honest($Terminal)
+      Honest($Issuer),  Honest(~PAN)
       ]->
   []
 
@@ -238,35 +240,33 @@ lemma executable_online:
 /////////////////////////////////////////////////////
 
 lemma auth_to_terminal_offline:
-  "All T P r t #i.
-    Commit(T, P, <r, 'Terminal', t>)@i // terminal to card authentication
+  "All P t #i.
+    Commit('Terminal', P, <'Card' ,'Terminal', t>)@i 
    ==>
-    (Ex #j. Running(P, T, <r, 'Terminal', t>)@j) | // open card to terminal
+    (Ex #j. Running(P, 'Terminal', <'Card', 'Terminal', t>)@j) | 
     Ex A #k. Honest(A)@i & Compromise(A)@k"
 
 lemma auth_to_terminal_online:
-  "All T B P r t c #i #j.
+  "All T B P t #i.
   //Terminal-Card, Issuer
-  Commit(T, P, <r, 'Terminal', t>)@i &
-  Commit(T, B, <c, 'Terminal', t>)@j
+  Online()@i &
+  Commit('Terminal', P, <'Card', 'Terminal', t>)@i &
+  Commit(T, B, <'Issuer', 'Terminal', t>)@i
    ==>
-    (Ex #m. Running(P, T, <r, 'Terminal', t>)@m) |
-    (Ex #n. Running(B, T, <c, 'Terminal', t>)@n) |
-    Ex A #k. Honest(A)@i & Compromise(A)@k"
+    (Ex #j. Running(P, 'Terminal', <'Card', 'Terminal', t>)@j) &
+    (Ex #k. Running(B, T, <'Issuer', 'Terminal', t>)@k ) |
+    Ex A #l. Honest(A)@i & Compromise(A)@l"
 
 
 lemma auth_to_issuer:
-  "All T B P r t c #i #j.
+  "All T B P t #i.
   //Issuer-Card, Terminal
-  Commit(B, P, <r, 'Issuer', t>)@i &
-  Commit(B, T, <c, 'Issuer', t>)@j
+  Commit(B, P, <'Card', 'Issuer', t>)@i &
+  Commit(B, T, <'Terminal', 'Issuer', t>)@i
    ==>
-    (Ex #m. Running(T, B, <r, 'Issuer', t>)@m) |
-    (Ex #n. Running(P, B, <c, 'Issuer', t>)@n) |
-    Ex A #k. Honest(A)@i & Compromise(A)@k"
-
-
-
+    (Ex #j. Running(P, B, <'Card', 'Issuer', t>)@j) &
+    (Ex #k. Running(T, B, <'Terminal', 'Issuer', t>)@k) |
+    Ex A #m. Honest(A)@i & Compromise(A)@m"
 
 
 end
