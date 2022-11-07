@@ -241,9 +241,10 @@ lemma executable_online:
 
 lemma auth_to_terminal_offline:
   "All P t #i.
+    not(Online()@i) &
     Commit('Terminal', P, <'Card' ,'Terminal', t>)@i 
    ==>
-    (Ex #j. Running(P, 'Terminal', <'Card', 'Terminal', t>)@j) | 
+    (Ex #j. Running(P, 'Terminal', <'Card', 'Terminal', t>)@j) |
     Ex A #k. Honest(A)@i & Compromise(A)@k"
 
 lemma auth_to_terminal_online:
