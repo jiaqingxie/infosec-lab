@@ -1,0 +1,15 @@
+victim_port: 61232
+student_subnet: 10.57.120.128/25
+default_subnet: 10.57.120.128/28
+wireguard_ip: 10.57.120.129
+sciond_ip: 10.57.120.131
+client_subnet: 10.57.120.144/28
+server_subnet: 10.57.120.160/28
+default_server_veth_ip: 10.57.120.161
+default_client_veth_ip: 10.57.120.145
+server_bridge_ip: 10.57.120.162
+client_bridge_ip: 10.57.120.146
+monitor_ip: 10.57.120.130
+local_victim_ip: 10.57.120.132
+prometheus_ip: 127.0.0.1
+customer_ip: 10.57.120.133
