@@ -1,0 +1,9 @@
+"isl-lab-2022-grade" {0d185645-2604-4aba-b640-452a33db2f86}
+[GRADER] VM by name isl-lab-2022-grade already exists. Not importing new VM. To import a fresh VM delete the existing VM first
+"isl-lab-2022-grade" {0d185645-2604-4aba-b640-452a33db2f86}
+[GRADER] VM by name isl-lab-2022-grade is already running. Not restarting it.
+[GRADER] copied solution script to VM
+[GRADER] Removed any existing flag files
+[GRADER] sent command to execute solution script; waiting for 60 seconds...
+[GRADER] ran solution script
+[GRADER] ran component healthcheck
