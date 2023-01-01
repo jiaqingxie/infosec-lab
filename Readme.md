@@ -14,7 +14,7 @@ HS 2021: [Toroto006](https://github.com/Toroto006/InfoSecLab-ETHZ-HS21), [schwyz
 
 HS 2020: [charlotteout](https://github.com/charlotteout/Information-Security-Stuff), [YukariSonz](https://github.com/YukariSonz/ETHZ_inforsec_lab)
 
-Also by convenience to the lab sheets, I have moved the handouts outside which are located under the main folder.
+Also by convenience to the lab sheets, I have moved the handouts outside which are located under the handout folder.
 If you find those information helpful, I would appreciate if you can star this repo. Thank you :) 
 
 ### Important information
