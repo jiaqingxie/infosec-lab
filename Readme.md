@@ -1,4 +1,4 @@
-# Information Security Lab
+# ETH Zurich Information Security Lab
 
 Hi, welcome to the security world at eth zurich. Yes, as an AI/ML research directed student, you might not get touch to security/system/programming language things before. After this course, you will learn a lot of things such as system/computer security, cryptography, network security, CTF/PWN, and AI security. Of course, you will go through some other programming languages besides python, for example, C, Tamarin, and Go. Have fun and give yourself a try in security enginnering.
 
